@@ -1,0 +1,8 @@
+{
+  "feature": 2,
+  "enabled": true,
+  "settings": {
+    "timeout": 2000,
+    "retries": 4
+  }
+}
