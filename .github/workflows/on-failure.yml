@@ -1,0 +1,15 @@
+name: On merge group failure
+
+on:
+  pull_request:
+    types:
+      - dequeued
+
+jobs:
+  on_merge_group_failure:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.reason == 'CI_FAILURE' }}
+    steps:
+      - name: Dump event
+        run: |
+          echo ${{ github.event }}
