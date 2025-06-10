@@ -10,6 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     if: ${{ github.event.reason == 'CI_FAILURE' }}
     steps:
-      - name: Dump event
-        run: |
-          echo ${{ github.event }}
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            console.log(JSON.stringify(context, null, 2));
