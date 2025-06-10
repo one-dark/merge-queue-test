@@ -74,6 +74,9 @@ EOF
 // Tests for feature $i
 const feature = require('./feature');
 
+// Check if we're running in GitHub merge queue
+const isInMergeQueue = process.env.GITHUB_EVENT_NAME === 'merge_group';
+
 describe('Feature $i', () => {
   test('should have correct ID', () => {
     // Always fail in merge queue, pass in PR workflows
