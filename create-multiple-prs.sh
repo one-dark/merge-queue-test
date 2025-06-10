@@ -1,17 +1,17 @@
 #!/bin/bash
 
 # Script to create multiple PRs for testing merge queue
-# Usage: ./create-multiple-prs.sh [number_of_prs] [--approve]
+# Usage: ./create-multiple-prs.sh [number_of_prs] [--merge]
 
 # Parse arguments
 BASE_BRANCH="main"
-APPROVE_FLAG=false
+MERGE_FLAG=false
 NUM_PRS=3
 
 for arg in "$@"; do
   case $arg in
-  --approve)
-    APPROVE_FLAG=true
+  --merge)
+    MERGE_FLAG=true
     shift
     ;;
   [0-9]*)
@@ -160,12 +160,12 @@ PR $i of $NUM_PRS in this test batch."
 
   echo "PR $i created successfully!"
 
-  # Auto-approve the PR if --approve flag is set
-  if [ "$APPROVE_FLAG" = true ]; then
+  # Auto-merge the PR if --merge flag is set
+  if [ "$MERGE_FLAG" = true ]; then
     PR_NUMBER=$(echo "$PR_URL" | grep -o '[0-9]*$')
-    echo "Auto-approving PR #$PR_NUMBER..."
-    gh pr review $PR_NUMBER --approve
-    echo "PR #$PR_NUMBER approved!"
+    echo "Auto-merging PR #$PR_NUMBER..."
+    gh pr merge $PR_NUMBER --merge --auto
+    echo "PR #$PR_NUMBER merged!"
   fi
 
   # Return to main branch for next PR
@@ -175,20 +175,20 @@ done
 echo ""
 echo "Successfully created $NUM_PRS pull requests!"
 
-if [ "$APPROVE_FLAG" = true ]; then
-  echo "All PRs have been automatically approved!"
+if [ "$MERGE_FLAG" = true ]; then
+  echo "All PRs have been automatically merged!"
 fi
 
 echo ""
 echo "Next steps:"
-if [ "$APPROVE_FLAG" = true ]; then
-  echo "1. PRs are already approved and ready for merge queue"
-  echo "2. Add PRs to merge queue to test behavior"
+if [ "$MERGE_FLAG" = true ]; then
+  echo "1. PRs have been automatically merged"
+  echo "2. Check the merge queue behavior and results"
 else
   echo "1. Review the PRs in GitHub"
-  echo "2. Approve each PR (or use --approve flag next time)"
+  echo "2. Approve and merge each PR (or use --merge flag next time)"
   echo "3. Add PRs to merge queue to test behavior"
   echo ""
-  echo "To approve all PRs quickly (requires appropriate permissions):"
-  echo "gh pr list --author @me --json number --jq '.[].number' | xargs -I {} gh pr review {} --approve"
+  echo "To merge all PRs quickly (requires appropriate permissions):"
+  echo "gh pr list --author @me --json number --jq '.[].number' | xargs -I {} gh pr merge {} --merge"
 fi
