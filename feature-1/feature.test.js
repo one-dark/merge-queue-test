@@ -5,6 +5,7 @@ const assert = require('node:assert');
 
 // Check if we're running in GitHub merge queue
 const isInMergeQueue = process.env.GITHUB_EVENT_NAME === 'merge_group';
+console.log('isInMergeQueue', isInMergeQueue);
 
 describe('Feature 1', () => {
   test('should have correct ID', () => {
