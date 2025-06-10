@@ -127,8 +127,8 @@ EOF
   fi
 
   # Stage and commit changes
-  git add "feature-$i/"
-  git commit -m "Add feature $i
+  git add -q "feature-$i/"
+  git commit -q -m "Add feature $i
 
 - Implement feature $i functionality
 - Add comprehensive tests
@@ -136,7 +136,7 @@ EOF
 - Part of merge queue testing"
 
   # Push branch
-  git push origin $BRANCH_NAME
+  git push -q origin $BRANCH_NAME
 
   # Create PR using gh
   PR_BODY="## Description
