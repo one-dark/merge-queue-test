@@ -1,10 +1,29 @@
 #!/bin/bash
 
 # Script to create multiple PRs for testing merge queue
-# Usage: ./create-multiple-prs.sh [number_of_prs]
+# Usage: ./create-multiple-prs.sh [number_of_prs] [--approve]
 
-NUM_PRS=${1:-3}
+# Parse arguments
 BASE_BRANCH="main"
+APPROVE_FLAG=false
+NUM_PRS=3
+
+for arg in "$@"; do
+  case $arg in
+  --approve)
+    APPROVE_FLAG=true
+    shift
+    ;;
+  [0-9]*)
+    NUM_PRS=$arg
+    shift
+    ;;
+  *)
+    # Unknown option
+    shift
+    ;;
+  esac
+done
 
 # Check if gh is installed
 if ! command -v gh &>/dev/null; then
@@ -129,28 +148,43 @@ This PR adds feature $i as part of merge queue testing.
 ## Context
 PR $i of $NUM_PRS in this test batch."
 
-  gh pr create \
+  PR_URL=$(gh pr create \
     --title "Feature $i: Add test feature for merge queue" \
     --body "$PR_BODY" \
     --base $BASE_BRANCH \
-    --head $BRANCH_NAME
+    --head $BRANCH_NAME)
 
   echo "PR $i created successfully!"
 
+  # Auto-approve the PR if --approve flag is set
+  if [ "$APPROVE_FLAG" = true ]; then
+    PR_NUMBER=$(echo "$PR_URL" | grep -o '[0-9]*$')
+    echo "Auto-approving PR #$PR_NUMBER..."
+    gh pr review $PR_NUMBER --approve
+    echo "PR #$PR_NUMBER approved!"
+  fi
+
   # Return to main branch for next PR
   git checkout $BASE_BRANCH
-
-  # Small delay to avoid rate limiting
-  sleep 2
 done
 
 echo ""
 echo "Successfully created $NUM_PRS pull requests!"
+
+if [ "$APPROVE_FLAG" = true ]; then
+  echo "All PRs have been automatically approved!"
+fi
+
 echo ""
 echo "Next steps:"
-echo "1. Review the PRs in GitHub"
-echo "2. Approve each PR (or use auto-approve if configured)"
-echo "3. Add PRs to merge queue to test behavior"
-echo ""
-echo "To approve all PRs quickly (requires appropriate permissions):"
-echo "gh pr list --author @me --json number --jq '.[].number' | xargs -I {} gh pr review {} --approve"
+if [ "$APPROVE_FLAG" = true ]; then
+  echo "1. PRs are already approved and ready for merge queue"
+  echo "2. Add PRs to merge queue to test behavior"
+else
+  echo "1. Review the PRs in GitHub"
+  echo "2. Approve each PR (or use --approve flag next time)"
+  echo "3. Add PRs to merge queue to test behavior"
+  echo ""
+  echo "To approve all PRs quickly (requires appropriate permissions):"
+  echo "gh pr list --author @me --json number --jq '.[].number' | xargs -I {} gh pr review {} --approve"
+fi
