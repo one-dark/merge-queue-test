@@ -12,6 +12,5 @@ jobs:
     steps:
       - name: Dump event
         run: |
-          echo "Base: ${{ github.event.pull_request.base.sha }}"
           echo "Head: ${{ github.event.pull_request.head.sha }}"
-          echo "Merge commit: ${{ github.event.pull_request.merge_commit_sha }}"
+          gh api '/repos/{owner}/{repo}/actions/workflows/merge-queue.yml/runs?head_sha=${{ github.event.pull_request.head.sha }}'
