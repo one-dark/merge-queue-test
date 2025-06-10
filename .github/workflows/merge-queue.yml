@@ -30,9 +30,8 @@ jobs:
 
       - name: Run tests
         run: |
-          echo "Running tests..."
+          npm test
           sleep 2
-          echo "Tests completed successfully"
         env:
           GITHUB_EVENT_NAME: ${{ github.event_name }}
 
