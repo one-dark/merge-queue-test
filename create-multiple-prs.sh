@@ -164,7 +164,7 @@ PR $i of $NUM_PRS in this test batch."
   if [ "$MERGE_FLAG" = true ]; then
     PR_NUMBER=$(echo "$PR_URL" | grep -o '[0-9]*$')
     echo "Auto-merging PR #$PR_NUMBER..."
-    gh pr merge $PR_NUMBER --merge --auto
+    gh pr merge $PR_NUMBER --auto
     echo "PR #$PR_NUMBER merged!"
   fi
 
