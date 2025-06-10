@@ -13,4 +13,6 @@ jobs:
       - name: Dump event
         run: |
           echo "Head: ${{ github.event.pull_request.head.sha }}"
-          gh api '/repos/{owner}/{repo}/actions/workflows/merge-queue.yml/runs?head_sha=${{ github.event.pull_request.head.sha }}'
+          gh api '/repos/one-dark/merge-queue-test/actions/workflows/merge-queue.yml/runs?head_sha=${{ github.event.pull_request.head.sha }}'
+        env:
+          GH_TOKEN: ${{ github.token }}
