@@ -127,8 +127,8 @@ EOF
   fi
 
   # Stage and commit changes
-  git add -q "feature-$i/"
-  git commit -q -m "Add feature $i
+  git add "feature-$i/"
+  git commit -m "Add feature $i
 
 - Implement feature $i functionality
 - Add comprehensive tests
