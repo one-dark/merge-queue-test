@@ -73,6 +73,8 @@ EOF
   cat >"feature-$i/feature.test.js" <<EOF
 // Tests for feature $i
 const feature = require('./feature');
+const { test, describe } = require('node:test');
+const assert = require('node:assert');
 
 // Check if we're running in GitHub merge queue
 const isInMergeQueue = process.env.GITHUB_EVENT_NAME === 'merge_group';
@@ -85,12 +87,12 @@ describe('Feature $i', () => {
       throw new Error('Test failure in merge queue');
     }
 
-    expect(feature.id).toBe($i);
+    assert.strictEqual(feature.id, $i);
   });
 
   test('should execute successfully', () => {
     const result = feature.execute();
-    expect(result.status).toBe('success');
+    assert.strictEqual(result.status, 'success');
   });
 });
 EOF
