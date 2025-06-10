@@ -35,6 +35,16 @@ jobs:
         env:
           GITHUB_EVENT_NAME: ${{ github.event_name }}
 
+      - name: Create artifact file
+        run: |
+          echo "foo, this is bar" > artifact.txt
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-artifact
+          path: artifact.txt
+
   lint:
     runs-on: ubuntu-latest
     steps:

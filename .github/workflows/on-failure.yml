@@ -10,9 +10,90 @@ jobs:
     runs-on: ubuntu-latest
     if: ${{ github.event.reason == 'CI_FAILURE' }}
     steps:
-      - name: Dump event
+      - name: Get workflow run and check suite info
+        id: get-check-info
         run: |
           echo "Head: ${{ github.event.pull_request.head.sha }}"
-          gh api '/repos/one-dark/merge-queue-test/actions/workflows/merge-queue.yml/runs?head_sha=${{ github.event.pull_request.head.sha }}'
+
+          # Get the workflow run
+          WORKFLOW_RUN=$(gh api '/repos/${{ github.repository }}/actions/workflows/merge-queue.yml/runs?head_sha=${{ github.event.pull_request.head.sha }}' --jq '.workflow_runs[0]')
+          echo "Workflow run: $WORKFLOW_RUN"
+
+          # Extract check suite ID
+          CHECK_SUITE_ID=$(echo "$WORKFLOW_RUN" | jq -r '.check_suite_id')
+          echo "Check suite ID: $CHECK_SUITE_ID"
+          echo "check_suite_id=$CHECK_SUITE_ID" >> $GITHUB_OUTPUT
+
+          # Get check runs for the check suite
+          CHECK_RUNS=$(gh api "/repos/${{ github.repository }}/check-suites/$CHECK_SUITE_ID/check-runs")
+          echo "Check runs: $CHECK_RUNS"
+
+          # Find the test check run
+          TEST_RUN_ID=$(echo "$CHECK_RUNS" | jq -r '.check_runs[] | select(.name == "test") | .id')
+          echo "Test run ID: $TEST_RUN_ID"
+          echo "test_run_id=$TEST_RUN_ID" >> $GITHUB_OUTPUT
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      - name: Get test annotations and download artifact
+        id: get-annotations
+        run: |
+          # Get annotations for the test run
+          if [ -n "${{ steps.get-check-info.outputs.test_run_id }}" ]; then
+            ANNOTATIONS=$(gh api "/repos/${{ github.repository }}/check-runs/${{ steps.get-check-info.outputs.test_run_id }}/annotations")
+            echo "Annotations: $ANNOTATIONS"
+            echo "annotations<<EOF" >> $GITHUB_OUTPUT
+            echo "$ANNOTATIONS" >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+          else
+            echo "No test run found"
+            echo "annotations=" >> $GITHUB_OUTPUT
+          fi
+
+          # Download artifact from the failed workflow run
+          WORKFLOW_RUN_ID=$(gh api '/repos/${{ github.repository }}/actions/workflows/merge-queue.yml/runs?head_sha=${{ github.event.pull_request.head.sha }}' --jq '.workflow_runs[0].id')
+          echo "Downloading artifacts from run ID: $WORKFLOW_RUN_ID"
+
+          # List and download artifacts
+          gh run download $WORKFLOW_RUN_ID --name test-artifact || echo "No artifacts found"
+
+          if [ -f "artifact.txt" ]; then
+            ARTIFACT_CONTENT=$(cat artifact.txt)
+            echo "Artifact content: $ARTIFACT_CONTENT"
+            echo "artifact_content=$ARTIFACT_CONTENT" >> $GITHUB_OUTPUT
+          fi
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      - name: Post comment with annotations and artifact
+        run: |
+          COMMENT_BODY="## 🚨 Merge Queue Failure
+
+          The merge queue run failed for commit \`${{ github.event.pull_request.head.sha }}\`.
+
+          ### Check Run Annotations
+          "
+
+          if [ -n "${{ steps.get-annotations.outputs.annotations }}" ]; then
+            COMMENT_BODY="$COMMENT_BODY
+          \`\`\`json
+          ${{ steps.get-annotations.outputs.annotations }}
+          \`\`\`"
+          else
+            COMMENT_BODY="$COMMENT_BODY
+          No annotations found for the test run."
+          fi
+
+          if [ -n "${{ steps.get-annotations.outputs.artifact_content }}" ]; then
+            COMMENT_BODY="$COMMENT_BODY
+
+          ### Artifact Content
+          \`\`\`
+          ${{ steps.get-annotations.outputs.artifact_content }}
+          \`\`\`"
+          fi
+
+          # Post comment to PR
+          gh pr comment ${{ github.event.pull_request.number }} --body "$COMMENT_BODY"
         env:
           GH_TOKEN: ${{ github.token }}
