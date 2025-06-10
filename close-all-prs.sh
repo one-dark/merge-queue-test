@@ -57,7 +57,7 @@ echo "Closing all open PRs..."
 close_pr() {
   local pr_num=$1
   echo "Closing PR #$pr_num..."
-  
+
   if gh pr close $pr_num 2>&1; then
     echo "✓ PR #$pr_num closed"
     return 0
@@ -71,7 +71,7 @@ close_pr() {
 export -f close_pr
 
 # Close PRs in parallel using xargs
-echo "$PR_NUMBERS" | xargs -I {} -P 10 bash -c 'close_pr "$@"' _ {}
+echo "$PR_NUMBERS" | xargs -I {} bash -c 'close_pr "$@"' _ {}
 
 # Wait for all background processes to complete
 wait
