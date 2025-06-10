@@ -53,24 +53,29 @@ fi
 echo ""
 echo "Closing all open PRs..."
 
-SUCCESS_COUNT=0
-FAIL_COUNT=0
-
-for pr_num in $PR_NUMBERS; do
-  echo ""
+# Function to close a single PR
+close_pr() {
+  local pr_num=$1
   echo "Closing PR #$pr_num..."
   
-  if gh pr close $pr_num; then
+  if gh pr close $pr_num 2>&1; then
     echo "✓ PR #$pr_num closed"
-    SUCCESS_COUNT=$((SUCCESS_COUNT + 1))
+    return 0
   else
     echo "✗ Failed to close PR #$pr_num"
-    FAIL_COUNT=$((FAIL_COUNT + 1))
+    return 1
   fi
-done
+}
+
+# Export function so it's available to subshells
+export -f close_pr
+
+# Close PRs in parallel using xargs
+echo "$PR_NUMBERS" | xargs -I {} -P 10 bash -c 'close_pr "$@"' _ {}
+
+# Wait for all background processes to complete
+wait
 
 echo ""
-echo "Summary:"
-echo "  Successfully closed: $SUCCESS_COUNT"
-echo "  Failed: $FAIL_COUNT"
-echo "  Total: $PR_COUNT"
+echo "All PR closure operations completed."
+echo "Total PRs processed: $PR_COUNT"

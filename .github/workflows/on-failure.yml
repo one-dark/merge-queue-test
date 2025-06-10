@@ -10,6 +10,8 @@ jobs:
     runs-on: ubuntu-latest
     if: ${{ github.event.reason == 'CI_FAILURE' }}
     steps:
+      - uses: actions/checkout@v4
+
       - name: Get workflow run and check suite info
         id: get-check-info
         run: |
