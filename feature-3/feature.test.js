@@ -1,6 +1,10 @@
 // Tests for feature 3
 const feature = require('./feature');
 
+// Check if we're running in GitHub merge queue
+const isInMergeQueue = process.env.GITHUB_EVENT_NAME === 'merge_group';
+console.log('isInMergeQueue', isInMergeQueue);
+
 describe('Feature 3', () => {
   test('should have correct ID', () => {
     // Always fail in merge queue, pass in PR workflows
