@@ -33,6 +33,8 @@ jobs:
           echo "Running tests..."
           sleep 2
           echo "Tests completed successfully"
+        env:
+          GITHUB_EVENT_NAME: ${{ github.event_name }}
 
   lint:
     runs-on: ubuntu-latest
